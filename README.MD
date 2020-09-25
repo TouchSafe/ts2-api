@@ -14,11 +14,17 @@ Through the old connections object, 'ProcessAckPacket'
 This method is valid through a few;
 
 [AuthenticateEntryCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/AuthenticateEntryCommand.cs#L106)
+
 [DownloadAuthTableCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/DownloadAuthTableCommand.cs#L119)
+
 [RecieveUserAuthCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/RecieveUserAuthCommand.cs#L109)
+
 [SendAuthTableCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/SendAuthTableCommand.cs#L127)
+
 [SendBusAuthTableCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/SendBusAuthTableCommand.cs#L111)
+
 [SendOldAuthTableCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/SendOldAuthTableCommand.cs#L106)
+
 
 
 In this function it uses a switch case (with only one case and no default...) to check the authentication state is WaitAck for both AethenticateEntryCommand and RecieveUserAuthCommand. (authstate is apart of connection, not passed through udp data)
@@ -74,7 +80,8 @@ Headerlength=10
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
 |Request command|location ID (uint16)||Tag # (uint32)||||Sequence # (uint16) **is big endian needs to swap to little** ||entity count|
 
-** for each entity in entity #**
+**for each entity in entity #**
+
 |data[0]|data[1]|data[2]|
 |:-----:|:-----:|:-----:|
 |auth type|userid (uint16) **big to little endian swap needed**||
@@ -86,7 +93,7 @@ HeaderLength=13
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:-----:|:-----:|:-----:|:-----:|
 |Request command|Sequence # (uint16) || location ID (uint16)||Entity count (max is 100) uint8?|timeLong (assuming epoc) int64|||||||||
 
-** for each entity in entity #**
+**for each entity in entity #**
 
 |data[0]|data[1]|data[2]|data[3]|data[4]|data[5]|data[6]|data[7]|
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
