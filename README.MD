@@ -2,6 +2,8 @@
 
 Golang based api for ts2 (starting with acces control service)
 
+there is a help section for the API at the bottom
+
 ## Process
 
 This is info from the current TS2 Access control service
@@ -89,6 +91,7 @@ Headerlength=10
 ### UploadOfflineAuthData
 
 HeaderLength=13
+
 |buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|buf[6]|buf[7]|buf[8]|buf[9]|buf[10]|buf[11]|buf[12]|buf[13]|
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:-----:|:-----:|:-----:|:-----:|
 |Request command|Sequence # (uint16) || location ID (uint16)||Entity count (max is 100) uint8?|timeLong (assuming epoc) int64|||||||||
@@ -131,11 +134,169 @@ var tempArray = new byte[4];
 Array.Copy(rawUserData, 0, tempArray, 0, rawUserData.Length);
 `
 
+### ForceNewAuthTable/DownloadAuthenticate
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|Request command|sequence number (uint16)||
+
+Sequence number is where we are starting from
+Check for new database
+If request is forcenewauthtable or there just is a new one for the 'endpoint (request IP)' build
+Otherwise init transfer
+
+#### Responses
+
+#### no new auth table
+
+If there is no new auth table, tell them;
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|NoNewAuthTable board command|SeqNumber(uint16)[1]|SeqNumber(uint16)[0]|
+
+#### new auth table
+
+##### unack'd (first packet, or resending same packet)
+uint16 Packetsize=min(authtable.length - authtableseek, max packet size(500))
+
+Note that the packet size limit is 500,but the header for this data is size 6, so max size is actually 506??
+
+
+|buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|
+|:----:|:----:|:----:|:----:|:----:|:----:|
+|Request command (DownloadAuthenticateData)|SeqNumber(uint16)[1]|SeqNumber(uint16)[0]|packetsize(uint16)[1]|packetsize(uint16)[0]|islastpacket?|
+
+islastpacket is 1 (0000 0001) if datapacket size + auth table seek (which should be 0 if calling this function)== the auth table size, 0 (0000 0000) otherwise
+
+data packet is just stored _authtable
+
+##### processackpacket (recieved an acknowledgement)
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|Request command (DownloadAuthenticateAck)|ReqSeqNumber(uint16)|
+
+ReqSeqNumber should match seq number; then iterate sequence number and continue wiht unack'd packes before
+
+### DownloadOldAuthenticate
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|Request command |sequence number (uint16)||
+
+build old auth table? idk just implement
+
+#### Response
+
+SEE AUTH TABLE, DETAILS ARE EXACT SAME AFTER BUILDING OLD AUTH TABLE?
+
+### BusAuthenticate
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|Request command |sequence number (uint16)||
+
+build bus auth table? idk just implement
+
+#### Response
+
+SEE AUTH TABLE, DETAILS ARE EXACT SAME AFTER BUILDING bus AUTH TABLE?
+
+### IsServiceOnline
+
+|buf[0]|buf[1]|buf[2]|
+|:----:|:----:|:----:|
+|Request command(IsServiceOnlineAck) |SeqNumber(uint16)[1]|SeqNumber(uint16)[0]|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## word swizzle
 
-`
+```
 private static UInt16 WordSwizzle(UInt16 word)
 		{
 			return (UInt16)((word >> 8) | (word << 8));
 		}
-`
+```
+
+## HELP
+
+Just some QoL notes
+
+```
+dataPacket[1] = (Byte)(_seqNumber & 0xff);
+dataPacket[2] = (Byte)(_seqNumber >> 8);
+```
+
+All this does is store _seqNumber as a uint16 with swapped bytes, when recieving you would just cast combine and cast Uint16(dataPacker[1:2]) (not correct syntax but you get it)
+Would make more sense to just convert _seqNumber to byte array then go;
+
+```
+dataPacket[1]=_seqNumber[1]
+dataPacket[2]=_seqNumber[0]
+```
+
+HELP FOR UNDERSTANDING WHY THEY ARE SHIFTING BITS SO MUCH!?!?!
+
+```
+using System;
+
+namespace OperatorsAppl {
+
+   class Program {
+   
+      static void Main(string[] args) {
+         UInt16 a = 60;            /* 60 = 0011 1100 */ 
+          UInt16 b = 13;            /* 13 = 0000 1101 */
+          UInt16 c = 0; 
+         Byte d;
+         
+         c = (UInt16)(a & b);             /* 12 = 0000 1100 */ 
+         Console.WriteLine("Line 1 - Value of c is {0}", c );
+         
+         c = (UInt16)(a | b);             /* 61 = 0011 1101 */
+         Console.WriteLine("Line 2 - Value of c is {0}", c);
+         
+         c = (UInt16)(a ^ b);             /* 49 = 0011 0001 */
+         Console.WriteLine("Line 3 - Value of c is {0}", c);
+         
+         c = (UInt16)(~a);                /*-61 = 1100 0011 */
+         Console.WriteLine("Line 4 - Value of c is {0}", c);
+         
+         c = (UInt16)(a << 2);      /* 240 = 1111 0000 */
+         Console.WriteLine("Line 5 - Value of c is {0}", c);
+         
+         c = (UInt16)(a >> 4);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 6 - Value of c is {0}", c);
+        c = (UInt16)(a >> 6);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 7 - Value of c is {0}", c);
+        c = (UInt16)(a >> 8);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 8 - Value of c is {0}", c);
+        c = (UInt16)(UInt16.MaxValue >> 8);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 9 - Value of c is {0}", c);
+         
+         
+        d = (Byte)(UInt16.MaxValue >> 8);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 10 - Value of d is {0}", d);
+         d = (Byte)(UInt16.MaxValue & 0x00ff);      /* 15 = 0000 1111 */
+         Console.WriteLine("Line 11 - Value of d is {0}", d);
+         
+         //max uint16= 65535
+         //max uint8 = 
+         Console.ReadLine();
+      }
+   }
+}
+```
