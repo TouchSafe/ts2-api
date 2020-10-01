@@ -13,7 +13,7 @@ Receive UDP packet. If a **not new** action/connection (ie previous action from 
 ### ProcessAck 
 
 Through the old connections object, 'ProcessAckPacket'
-This method is valid through a few;
+This method is valid through a few; 
 
 [AuthenticateEntryCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/AuthenticateEntryCommand.cs#L106)
 
@@ -27,8 +27,6 @@ This method is valid through a few;
 
 [SendOldAuthTableCommand.cs](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/SendOldAuthTableCommand.cs#L106)
 
-
-
 In this function it uses a switch case (with only one case and no default...) to check the authentication state is WaitAck for both AethenticateEntryCommand and RecieveUserAuthCommand. (authstate is apart of connection, not passed through udp data)
 
 #### Authstate
@@ -37,11 +35,12 @@ These methods are near identical, if the requested command is AuthenticateAck, a
 Only difference is RecieveUserAuthCommand logs if it was vehicle or user, authentrycommand just logs asset id.
 
 #### TransferState
+
 All these are to do with the auth table and in reference to sending it somewhere.
 
 (DownloadAuthTableCommand, SednAuthTableCommand, SendBusAuthTableCommand, SendOldAuthTableCommand)
 
-The only difference is after sanity checking the header and checking the sequence number;
+The only difference is after sanity checking the header and checking the sequence number; 
 
 Reset retry count ( we are sending a new packet), increment the sequence numbers, send next packet of data (which is part of the authentication table)
 
@@ -52,7 +51,6 @@ These should all just be one method...
 UDP
 
 buf[0]= Board command
-
 
 |BoardCommand|Process|Rec/Send|header len|
 |---|---|---|---|
@@ -65,14 +63,60 @@ buf[0]= Board command
 |IsServiceOnline|IsServiceOnlineCommand|Recieve|NA|
 |ALL OTHERS|???????????|??????????|?|
 
+
+**Authentication type**
+None = 0,
+Pin = 1,
+Rfid = 2,
+Transponder = 3,
+Erased = 4,
+Fingerprint = 5,
+Password = 6,
+ManualOverride = 7       
+ 
 ### AuthenticateSingle
+
+See [AuthDataToString](https://github.com/TouchSafe3/touchsafe2/blob/master/TouchSafe.AccessControlService/EntryController/RecieveUserAuthCommand.cs#L274-L310)
+
+**Header**
 
 Headerlength=8
 
-|buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|buf[6]|buf[7]|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|Request command|Request header size| Sequence number (uint16)||AP ID (uint16)||Request auth type|req data length|
+|buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|buf[6]|buf[7]|buf[8:]|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Request command|Request header size| Sequence number (uint16)||AP ID (uint16)||Request auth type|req data length|AUTHENTICATION DATA|
 
+**Authentication data**
+
+PIN
+
+|auth[0]|auth[1]|auth[2]|auth[3]|
+|:-----:|:-----:|:-----:|:-----:|
+|Pin#1|Pin#2|Pin#3|Pin#4|
+
+Note there seems to be no limit on length of pin at the moment...
+
+TRANSPONDER
+
+Reverse bytes then cast to int ie; 
+123 (00000001 00000010 00000011)
+would turn into
+197121 (00000011 00000010 00000001)
+
+RFID
+
+Reverse pins then just string it
+
+#### Response
+
+NOTIFY AUTH STATUS
+Packet size is 9
+
+|buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|buf[6]|buf[7]|buf[8]|
+|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
+|BoardCommand.AuthResponse|packetsize(9)|Sequencenumber[0]|SequenceNumber[1]|authType(rfid/pin etc)|authLength??? check me|userId[0]|userId[1]|Success (bool)|
+
+Keep retrying if not recieved
 
 ### UploadAuthData
 
@@ -114,7 +158,6 @@ HeaderLength=13
 |:-----:|:-----:|:-----:|
 |auth type|user id (reverse bytes then uint16)||
 
-
 **rawuserdata**
 
 |Auth type|rawuserdata[0]|rawuserdata[1]|rawuserdata[2]|
@@ -125,13 +168,12 @@ HeaderLength=13
 
 TODO: Check what pins actually come out as, we are copying 3 bytes into 4 byte array, just verify logically what the outcome is or should be(make C# and go programs and check they match)
 
-
 `
-var rawUserData = binaryReader.ReadBytes(3);
-uint authData = 0;
-Array.Reverse(rawUserData);
-var tempArray = new byte[4];
-Array.Copy(rawUserData, 0, tempArray, 0, rawUserData.Length);
+var rawUserData = binaryReader. ReadBytes(3); 
+uint authData = 0; 
+Array. Reverse(rawUserData); 
+var tempArray = new byte[4]; 
+Array. Copy(rawUserData, 0, tempArray, 0, rawUserData. Length); 
 `
 
 ### ForceNewAuthTable/DownloadAuthenticate
@@ -149,7 +191,7 @@ Otherwise init transfer
 
 #### no new auth table
 
-If there is no new auth table, tell them;
+If there is no new auth table, tell them; 
 
 |buf[0]|buf[1]|buf[2]|
 |:----:|:----:|:----:|
@@ -158,10 +200,10 @@ If there is no new auth table, tell them;
 #### new auth table
 
 ##### unack'd (first packet, or resending same packet)
+
 uint16 Packetsize=min(authtable.length - authtableseek, max packet size(500))
 
-Note that the packet size limit is 500,but the header for this data is size 6, so max size is actually 506??
-
+Note that the packet size limit is 500, but the header for this data is size 6, so max size is actually 506??
 
 |buf[0]|buf[1]|buf[2]|buf[3]|buf[4]|buf[5]|
 |:----:|:----:|:----:|:----:|:----:|:----:|
@@ -209,22 +251,9 @@ SEE AUTH TABLE, DETAILS ARE EXACT SAME AFTER BUILDING bus AUTH TABLE?
 |:----:|:----:|:----:|
 |Request command(IsServiceOnlineAck) |SeqNumber(uint16)[1]|SeqNumber(uint16)[0]|
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## word swizzle
 
-```
+``` 
 private static UInt16 WordSwizzle(UInt16 word)
 		{
 			return (UInt16)((word >> 8) | (word << 8));
@@ -235,22 +264,22 @@ private static UInt16 WordSwizzle(UInt16 word)
 
 Just some QoL notes
 
-```
+``` 
 dataPacket[1] = (Byte)(_seqNumber & 0xff);
 dataPacket[2] = (Byte)(_seqNumber >> 8);
 ```
 
 All this does is store _seqNumber as a uint16 with swapped bytes, when recieving you would just cast combine and cast Uint16(dataPacker[1:2]) (not correct syntax but you get it)
-Would make more sense to just convert _seqNumber to byte array then go;
+Would make more sense to just convert _seqNumber to byte array then go; 
 
-```
+``` 
 dataPacket[1]=_seqNumber[1]
 dataPacket[2]=_seqNumber[0]
 ```
 
 HELP FOR UNDERSTANDING WHY THEY ARE SHIFTING BITS SO MUCH!?!?!
 
-```
+``` 
 using System;
 
 namespace OperatorsAppl {

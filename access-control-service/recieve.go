@@ -6,8 +6,10 @@ import (
 )
 
 var (
-	errEmptyBuf              = errors.New("buffer is empty")
-	errIncorrectBoardCommand = errors.New("incorrect BoardCommand ")
+	errEmptyBuf                    = errors.New("buffer is empty")
+	errIncorrectBoardCommand       = errors.New("incorrect BoardCommand")
+	errIncorrectAuthenticationType = errors.New("incorrect AuthenticationType")
+	errNotImplemented              = errors.New("not yet implemented")
 )
 
 //Receive is the default entry point for recieving the udp packets
@@ -25,37 +27,57 @@ func Receive(buf []byte, addr net.Addr) error {
 	//TODO: Put ack here, this is implementation detail not API?
 
 	switch BoardCommand(buf[0]) {
-	case BoardCommandNone:
 	case BoardCommandUploadAuthData:
-	case BoardCommandUploadAuthDataAck:
+		RecieveUploadAuthDataCommand(buf, addr)
 	case BoardCommandAuthenticateSingle:
 		ReceiveUserAuthCommand(buf, addr)
 	case BoardCommandDownloadOldAuthenticate:
-	case BoardCommandDownloadOldAuthenticateAck:
-	case BoardCommandDownloadOldAuthenticateData:
-	case BoardCommandAuthenticateResponse:
-	case BoardCommandAuthenticateAck:
+		SendOldAuthTableCommand(buf, addr)
 	case BoardCommandUploadOfflineAuthData:
-	case BoardCommandUploadOfflineAuthDataAck:
-	case BoardCommandDownloadAuthenticate:
-	case BoardCommandDownloadAuthenticateAck:
-	case BoardCommandDownloadAuthenticateData:
+		RecieveUploadOfflineAuthDataCommand(buf, addr)
 	case BoardCommandIsServiceOnline:
-	case BoardCommandBoardCommandIsServiceOnlineAck:
-	case BoardCommandNoNewAuthTable:
-	case BoardCommandForceNewAuthTable:
-	case BoardCommandBusAuthenticateAck:
+		IsServiceOnlineCommand(buf, addr)
+	case BoardCommandForceNewAuthTable, BoardCommandDownloadAuthenticate:
+		SendAuthTableCommand(buf, addr)
 	case BoardCommandBusAuthenticate:
+		SendBusAuthTableCommand(buf, addr)
+	case BoardCommandNone:
+		fallthrough
+	case BoardCommandUploadAuthDataAck:
+		fallthrough
+	case BoardCommandDownloadOldAuthenticateAck:
+		fallthrough
+	case BoardCommandDownloadOldAuthenticateData:
+		fallthrough
+	case BoardCommandAuthenticateResponse:
+		fallthrough
+	case BoardCommandAuthenticateAck:
+		fallthrough
+	case BoardCommandUploadOfflineAuthDataAck:
+		fallthrough
+	case BoardCommandDownloadAuthenticateAck:
+		fallthrough
+	case BoardCommandDownloadAuthenticateData:
+		fallthrough
+	case BoardCommandBoardCommandIsServiceOnlineAck:
+		fallthrough
+	case BoardCommandNoNewAuthTable:
+		fallthrough
+	case BoardCommandBusAuthenticateAck:
+		fallthrough
 	case BoardCommandBusAuthenticateData:
+		return errNotImplemented
 	default:
 		return errIncorrectBoardCommand
-
 	}
 	return nil
 }
 
 //TODO: Sep into other files here
 
-func ReceiveUserAuthCommand(buf []byte, addr net.Addr) {
-
-}
+func RecieveUploadAuthDataCommand(buf []byte, addr net.Addr)        {}
+func RecieveUploadOfflineAuthDataCommand(buf []byte, addr net.Addr) {}
+func SendAuthTableCommand(buf []byte, addr net.Addr)                {}
+func SendOldAuthTableCommand(buf []byte, addr net.Addr)             {}
+func SendBusAuthTableCommand(buf []byte, addr net.Addr)             {}
+func IsServiceOnlineCommand(buf []byte, addr net.Addr)              {}
