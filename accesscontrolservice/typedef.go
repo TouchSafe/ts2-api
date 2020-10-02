@@ -1,4 +1,4 @@
-package access_control_service
+package accesscontrolservice
 
 //BoardCommand is the enumeration of the options the board command can send
 // though only a handful are actually used in the access control service (any others are just discarded...)
@@ -60,8 +60,11 @@ func (b BoardCommand) String() string {
 type ActionState uint
 
 const (
+	//ActionStateNone means there is no action to be made
 	ActionStateNone ActionState = iota
+	//ActionStateWaitAck means we are currently waiting for acknowledgement of the UDP packet sent
 	ActionStateWaitAck
+	//ActionStateTerminateConnect is used to specify they connection is over and can be discarded
 	ActionStateTerminateConnect
 )
 
@@ -84,13 +87,21 @@ func (u UpdateState) String() string { return [...]string{"None", "Completed", "
 type AuthenticationType uint
 
 const (
+	//AuthenticationTypeNone means there is no authentication type specified
 	AuthenticationTypeNone AuthenticationType = iota
+	//AuthenticationTypePin authenticate with Pin
 	AuthenticationTypePin
+	//AuthenticationTypeRFID authenticate with RFID
 	AuthenticationTypeRFID
+	//AuthenticationTypeTransponder authenticate with Transponder
 	AuthenticationTypeTransponder
+	//AuthenticationTypeErased authenticate with Erased??? TODO:ERASED what is this
 	AuthenticationTypeErased
+	//AuthenticationTypeFingerprint authenticate with Fingerprint
 	AuthenticationTypeFingerprint
+	//AuthenticationTypePassword authenticate with Password
 	AuthenticationTypePassword
+	//AuthenticationTypeManualOverride authenticate with ManualOverride assumably admin just saying yeah it's ok TODO:verify
 	AuthenticationTypeManualOverride
 )
 

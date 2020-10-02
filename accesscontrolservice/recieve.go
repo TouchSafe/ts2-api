@@ -1,15 +1,7 @@
-package access_control_service
+package accesscontrolservice
 
 import (
-	"errors"
 	"net"
-)
-
-var (
-	errEmptyBuf                    = errors.New("buffer is empty")
-	errIncorrectBoardCommand       = errors.New("incorrect BoardCommand")
-	errIncorrectAuthenticationType = errors.New("incorrect AuthenticationType")
-	errNotImplemented              = errors.New("not yet implemented")
 )
 
 //Receive is the default entry point for recieving the udp packets
