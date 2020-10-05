@@ -37,7 +37,7 @@ func authDataToString(authType AuthenticationType, authData []byte) (string, err
 			return "", ErrorDecodePacket{Source: "Transponder decode", Reason: fmt.Sprintf("authData len expected 2 bytes, but is %d", len(authData))}
 		}
 		//Swap the bytes 0,2 keep byte 1 (reverse order)
-		authData[0], authData[1] = authData[1], authData[0]
+		//authData[0], authData[1] = authData[1], authData[0]
 		result, err := ByteArrayToIntString(authData)
 		if err != nil {
 			//This will never be reached, as it will only get here with authdata len of 2
