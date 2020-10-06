@@ -19,30 +19,30 @@ func authDataToString(authType AuthenticationType, authData []byte) (string, err
 			pin += digit
 		}
 		return pin, nil
-	case AuthenticationTypeRFID:
+	case AuthenticationTypeTransponder:
 		if len(authData) != 3 {
-			return "", ErrorDecodePacket{Source: "RFID decode", Reason: fmt.Sprintf("authData len expected 3 bytes, but is %d", len(authData))}
+			return "", ErrorDecodePacket{Source: "Transponder decode", Reason: fmt.Sprintf("authData len expected 3 bytes, but is %d", len(authData))}
 		}
 		//Swap the bytes 0,2 keep byte 1 (reverse order)
-		authData[0], authData[2] = authData[2], authData[0]
+		//authData[0], authData[2] = authData[2], authData[0]
 		result, err := ByteArrayToIntString(authData)
 		if err != nil {
 			//This error will never be reached as len is checked before passing though
 			// and the function only fails on lenths too large
-			return "", ErrorDecodePacket{Source: "RFID decode", Reason: err.Error()}
+			return "", ErrorDecodePacket{Source: "Transponder decode", Reason: err.Error()}
 		}
 		return result, nil
-	case AuthenticationTypeTransponder:
+	case AuthenticationTypeRFID:
 		if len(authData) != 2 {
-			return "", ErrorDecodePacket{Source: "Transponder decode", Reason: fmt.Sprintf("authData len expected 2 bytes, but is %d", len(authData))}
+			return "", ErrorDecodePacket{Source: "RFID decode", Reason: fmt.Sprintf("authData len expected 2 bytes, but is %d", len(authData))}
 		}
 		//Swap the bytes 0,2 keep byte 1 (reverse order)
-		//authData[0], authData[1] = authData[1], authData[0]
+		authData[0], authData[1] = authData[1], authData[0]
 		result, err := ByteArrayToIntString(authData)
 		if err != nil {
 			//This will never be reached, as it will only get here with authdata len of 2
 			//The function only errors on authdata len >8
-			return "", ErrorDecodePacket{Source: "Transponder decode", Reason: err.Error()}
+			return "", ErrorDecodePacket{Source: "RFID decode", Reason: err.Error()}
 		}
 		return result, nil
 	case AuthenticationTypeErased:
@@ -63,12 +63,13 @@ func authDataToString(authType AuthenticationType, authData []byte) (string, err
 // stored in the byte array
 // (00000001) = "1"
 // (00010000) = "16"
-// (1111000000001111) = "4027514880"
+//little endian (000000001 00000000)= 1
 func ByteArrayToIntString(array []byte) (string, error) {
 	if len(array) > 8 {
 		return "0", errors.New("array too large, max len 8")
 	}
-	array = append(make([]byte, 8-len(array)), array...)
-	got := binary.BigEndian.Uint64(array)
+	//array = append(make([]byte, 8-len(array)), array...)
+	array = append(array, make([]byte, 8-len(array))...)
+	got := binary.LittleEndian.Uint64(array)
 	return fmt.Sprintf("%d", int64(got)), nil
 }

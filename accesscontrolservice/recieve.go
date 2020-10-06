@@ -4,10 +4,10 @@ import (
 	"net"
 )
 
-//Receive is the default entry point for recieving the udp packets
+//ProcessRequest is the default entry point for recieving the udp packets
 // though it generally won't be used in this context, it will be used
 // in the mock server, and is here for clarity.
-func Receive(buf []byte, addr net.Addr) error {
+func ProcessRequest(buf []byte, addr net.Addr) error {
 	if len(buf) == 0 {
 		return errEmptyBuf
 	}
@@ -20,19 +20,19 @@ func Receive(buf []byte, addr net.Addr) error {
 
 	switch BoardCommand(buf[0]) {
 	case BoardCommandUploadAuthData:
-		RecieveUploadAuthDataCommand(buf, addr)
+		ProcessUploadAuthDataRequest(buf, addr)
 	case BoardCommandAuthenticateSingle:
-		ReceiveUserAuthCommand(buf, addr)
+		ProcessUserAuthRequest(buf, addr)
 	case BoardCommandDownloadOldAuthenticate:
-		SendOldAuthTableCommand(buf, addr)
+		ProcessSendOldAuthTableRequest(buf, addr)
 	case BoardCommandUploadOfflineAuthData:
-		RecieveUploadOfflineAuthDataCommand(buf, addr)
+		ProcessUploadOfflineAuthDataRequest(buf, addr)
 	case BoardCommandIsServiceOnline:
-		IsServiceOnlineCommand(buf, addr)
+		ProcessIsServiceOnlineRequest(buf, addr)
 	case BoardCommandForceNewAuthTable, BoardCommandDownloadAuthenticate:
-		SendAuthTableCommand(buf, addr)
+		ProcessSendAuthTableRequest(buf, addr)
 	case BoardCommandBusAuthenticate:
-		SendBusAuthTableCommand(buf, addr)
+		ProcessSendBusAuthTableRequest(buf, addr)
 	case BoardCommandNone:
 		fallthrough
 	case BoardCommandUploadAuthDataAck:
@@ -64,12 +64,3 @@ func Receive(buf []byte, addr net.Addr) error {
 	}
 	return nil
 }
-
-//TODO: Sep into other files here
-
-func RecieveUploadAuthDataCommand(buf []byte, addr net.Addr)        {}
-func RecieveUploadOfflineAuthDataCommand(buf []byte, addr net.Addr) {}
-func SendAuthTableCommand(buf []byte, addr net.Addr)                {}
-func SendOldAuthTableCommand(buf []byte, addr net.Addr)             {}
-func SendBusAuthTableCommand(buf []byte, addr net.Addr)             {}
-func IsServiceOnlineCommand(buf []byte, addr net.Addr)              {}

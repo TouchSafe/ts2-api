@@ -93,7 +93,7 @@ func testAuthDataToString(t *testing.T) {
 
 func TestByteArrayToIntString(t *testing.T) {
 	input := [][]byte{
-		{0x00, 0x0c}, //12
+		{0x0c, 0x00}, //12
 		{1, 1},
 		{0, 0, 0, 0},
 		{},
