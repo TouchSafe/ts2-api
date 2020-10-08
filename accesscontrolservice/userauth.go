@@ -2,7 +2,10 @@ package accesscontrolservice
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 //UserAuth contains data for the current requested authentication
@@ -19,9 +22,19 @@ type Auth struct {
 	AuthenticationData string
 }
 
+//EncodeTS2 encodes the struct for TS2 network communication
+func (ua UserAuth) EncodeTS2() []byte {
+
+}
+
 //ReceiveUserAuthCommand handles recieving the SINGLE user auth packet, this may not be 100% necessary
 func ReceiveUserAuthCommand(buf []byte, addr net.Addr) {
-
+	ua, err := DecodeUserAuthPacket(buf)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	spew.Dump(ua)
 }
 
 //DecodeUserAuthPacket decodes the SINGLE user authentication packet recieved
