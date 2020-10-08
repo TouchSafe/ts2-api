@@ -27,15 +27,14 @@ func (ua UserAuth) EncodeTS2() []byte {
 
 }
 
-//ReceiveUserAuthCommand handles recieving the SINGLE user auth packet, this may not be 100% necessary
-func ReceiveUserAuthCommand(buf []byte, addr net.Addr) {
+//ProcessUserAuthRequest handles recieving the SINGLE user auth packet, this may not be 100% necessary
+func ProcessUserAuthRequest(buf []byte, addr net.Addr) {
 	ua, err := DecodeUserAuthPacket(buf)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	spew.Dump(ua)
-}
 
 //DecodeUserAuthPacket decodes the SINGLE user authentication packet recieved
 func DecodeUserAuthPacket(buf []byte) (UserAuth, error) {
@@ -44,15 +43,17 @@ func DecodeUserAuthPacket(buf []byte) (UserAuth, error) {
 	boardCommand := uint(buf[0])
 	headerSize := uint(buf[1])
 	if BoardCommand(boardCommand) != BoardCommandAuthenticateSingle || headerSize != expectedHeaderSize || uint(len(buf)) <= expectedHeaderSize {
-		return UserAuth{}, ErrorDecodePacket{Source: "SingleUserAuth", Reason: "header or board command issue"}
+		return UserAuth{}, ErrorDecodePacket{Source: "SingleUserAuth",
+			Reason: "header or board command issue"}
 	}
-	sequenceNumber := binary.BigEndian.Uint16(buf[2:3])
-	accessPointID := binary.BigEndian.Uint16(buf[4:5])
+	sequenceNumber := binary.LittleEndian.Uint16(buf[2:3])
+	accessPointID := binary.LittleEndian.Uint16(buf[4:5])
 	requestAuthType := uint(buf[6])
 	requestDataLength := uint(buf[7])
 	authenticationData := buf[8:]
 	if requestDataLength != uint(len(authenticationData)) {
-		return UserAuth{}, ErrorDecodePacket{Source: "SingleUserAuth", Reason: "specified data length does not match data length recieved"}
+		return UserAuth{}, ErrorDecodePacket{Source: "SingleUserAuth",
+			Reason: "specified data length does not match data length recieved"}
 	}
 	userAuth := UserAuth{
 		BoardCommand:   BoardCommand(boardCommand),

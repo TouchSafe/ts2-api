@@ -2,6 +2,9 @@ package accesscontrolservice
 
 import (
 	"errors"
+	"fmt"
+	"runtime/debug"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -35,6 +38,9 @@ func TestAuthDataToStringCorrect(t *testing.T) {
 	for i := range inAuthType {
 		got, err := authDataToString(inAuthType[i], []byte{1, 2})
 		if got != want[i] || err != nil {
+			gotn, _ := strconv.Atoi(got)
+			wantn, _ := strconv.Atoi(want[i])
+			fmt.Printf("want:\t%s\n got:\t%s", strconv.FormatInt(int64(wantn), 2), strconv.FormatInt(int64(gotn), 2))
 			errorFail(t, "auth to string, 2 bytes correct", i, want[i], nil, got, err)
 		}
 	}
@@ -87,7 +93,7 @@ func testAuthDataToString(t *testing.T) {
 
 func TestByteArrayToIntString(t *testing.T) {
 	input := [][]byte{
-		{0x00, 0x0c}, //12
+		{0x0c, 0x00}, //12
 		{1, 1},
 		{0, 0, 0, 0},
 		{},
@@ -117,4 +123,5 @@ func TestByteArrayToIntString(t *testing.T) {
 
 func errorFail(t *testing.T, test string, testIndex int, want string, wantErr error, got string, err error) {
 	t.Errorf("In %s, test %d failed\nwant:\t%v\nwanterr:\t%v\ngot:\t%v\ngoterr: \t%v", test, testIndex, want, wantErr, got, err)
+	t.Log(string(debug.Stack()))
 }
