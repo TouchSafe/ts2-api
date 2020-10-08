@@ -1,5 +1,10 @@
 package accesscontrolservice
 
+import (
+	"fmt"
+	"strconv"
+)
+
 //BoardCommand is the enumeration of the options the board command can send
 // though only a handful are actually used in the access control service (any others are just discarded...)
 type BoardCommand uint
@@ -27,6 +32,43 @@ const (
 	BoardCommandBusAuthenticate
 	BoardCommandBusAuthenticateData
 )
+
+//BoardCommandFromString gets the board command from a supplied string
+func BoardCommandFromString(in string) (BoardCommand, error) {
+	list := []string{
+		"None",
+		"UploadAuthData",
+		"UploadAuthDataAck",
+		"AuthenticateSingle",
+		"DownloadOldAuthenticate",
+		"DownloadOldAuthenticateAck",
+		"DownloadOldAuthenticateData",
+		"AuthenticateResponse",
+		"AuthenticateAck",
+		"UploadOfflineAuthData",
+		"UploadOfflineAuthDataAck",
+		"DownloadAuthenticate",
+		"DownloadAuthenticateAck",
+		"DownloadAuthenticateData",
+		"IsServiceOnline",
+		"BoardCommandIsServiceOnlineAck",
+		"NoNewAuthTable",
+		"ForceNewAuthTable",
+		"BusAuthenticateAck",
+		"BusAuthenticate",
+		"BusAuthenticateData",
+	}
+	i, err := strconv.Atoi(in)
+	if err == nil && i >= 0 && i < int(BoardCommandBusAuthenticateData) {
+		return BoardCommand(i), nil
+	}
+	for i, l := range list {
+		if in == l {
+			return BoardCommand(i), nil
+		}
+	}
+	return 0, fmt.Errorf("could not get board command with %s", in)
+}
 
 //String converts the board command to the string of what it is
 func (b BoardCommand) String() string {
