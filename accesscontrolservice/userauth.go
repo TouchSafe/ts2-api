@@ -24,7 +24,9 @@ type Auth struct {
 
 //EncodeTS2 encodes the struct for TS2 network communication
 func (ua UserAuth) EncodeTS2() []byte {
-
+	expectedHeaderSize := uint(8)
+	buf := make([]byte, expectedHeaderSize)
+	return buf
 }
 
 //ProcessUserAuthRequest handles recieving the SINGLE user auth packet, this may not be 100% necessary
@@ -35,6 +37,8 @@ func ProcessUserAuthRequest(buf []byte, addr net.Addr) {
 		return
 	}
 	spew.Dump(ua)
+
+}
 
 //DecodeUserAuthPacket decodes the SINGLE user authentication packet recieved
 func DecodeUserAuthPacket(buf []byte) (UserAuth, error) {
