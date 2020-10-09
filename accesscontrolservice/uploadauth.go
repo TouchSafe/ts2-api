@@ -3,7 +3,15 @@ package accesscontrolservice
 import (
 	"encoding/binary"
 	"net"
+	"strconv"
 )
+
+//OldEntity contains info for each entity (inside the car?) being sent
+type OldEntity struct {
+	//AuthType should always be transponder as they are in the car???
+	AuthType AuthenticationType
+	UserID   uint16
+}
 
 //OldAuth not 100% sure of what it does but it appears to be only for cars and using transponer
 type OldAuth struct {
@@ -13,13 +21,6 @@ type OldAuth struct {
 	Entities       []OldEntity
 }
 
-//OldEntity contains info for each entity (inside the car?) being sent
-type OldEntity struct {
-	//AuthType should always be transponder as they are in the car???
-	AuthType AuthenticationType
-	UserID   uint16
-}
-
 //EncodeTS2 encodes the struct for TS2 network communication
 func (oe OldEntity) EncodeTS2() []byte {
 	expectedHeaderSize := 3
@@ -27,6 +28,10 @@ func (oe OldEntity) EncodeTS2() []byte {
 	buf[0] = byte(oe.AuthType)
 	binary.BigEndian.PutUint16(buf[1:3], oe.UserID)
 	return buf
+}
+
+func (oe OldEntity) toString() string {
+	return "OldEntity{" + oe.AuthType.String() + "," + strconv.Itoa(int(oe.UserID)) + "}"
 }
 
 //EncodeTS2 encodes the struct for TS2 network communication
